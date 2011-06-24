@@ -23,11 +23,16 @@ using namespace lucene::search;
 using namespace lucene::queryParser;
 
 const static int CL_MAX_DIR = 220;
+struct SearchData {
+   const char* path;
+   const char* score;
+};
+
+int arrsize;
 
 
 
-
-void SearchFilesC(const char* index, const char* fobizzle){
+SearchData *SearchFilesC(const char* index, const char* fobizzle){
 
     standard::StandardAnalyzer analyzer;
     char line[80];
@@ -62,12 +67,25 @@ void SearchFilesC(const char* index, const char* fobizzle){
         Hits* h = s.search(q);
         uint32_t srch = (int32_t)(Misc::currentTimeMillis() - str);
         str = Misc::currentTimeMillis();
-        //SearchData search[h->length()];
+        arrsize = h->length();
+        SearchData *search = new SearchData[h->length()];
         for ( size_t i=0; i < h->length(); i++ ){
             Document* doc = &h->doc(i);
             //const TCHAR* buf = doc.get(_T("contents"));
             _tprintf(_T("%d. %S - %f\n"), i, doc->get(_T("path")), h->score(i));
-            //search[i].set_path(doc->get(_T("path")));
+            //const TCHAR* wtfbatman;
+            //wtfbatman =  doc->get(_T("path"));
+            //search[(int)i].score =  h->score(i);
+            //printf("Adding %S %d\n", search[i].path, i);
+            char *wtfbbq;
+            wtfbbq = new char[100];
+            sprintf(wtfbbq,"%S %f", doc->get(_T("path")), h->score(i));
+            search[(int)i].path = wtfbbq;
+            //sprintf(str,"%S", String::New((char*)doc->get(_T("path")),5));
+            //printf("PIZZA %s\n", wtfbbq);
+            //sprintf(search[i].path,"%S",(const char*)doc->get(_T("path")));
+            //printf("segfault");
+            //strcpy(search[i].path,(const char*)doc->get(_T("path")));
         
         }
 
@@ -75,13 +93,15 @@ void SearchFilesC(const char* index, const char* fobizzle){
         printf("\n\nSearch took: %d ms.\n", srch);
         printf("Screen dump took: %d ms.\n\n", (int32_t)(Misc::currentTimeMillis() - str));
 
-        _CLLDELETE(h);
-        _CLLDELETE(q);
+        //_CLLDELETE(h);
+        //_CLLDELETE(q);
 
-        s.close();
+        //s.close();
 
-    reader->close();
-    _CLLDELETE(reader);
+    //reader->close();
+    //_CLLDELETE(reader);
+    //printf("Testing %S\n\n", search[0].path);
+    return search;
 };
 
 void FileDocument(const char* f, Document* doc){
@@ -133,9 +153,10 @@ class Lucene : public ObjectWrap
 {
 
 static Persistent<FunctionTemplate> s_ct;
-private: 
-vector<String> strings;
+private:
 int m_count;
+v8::Local<v8::Array> junk;
+
 
 
 
@@ -169,15 +190,15 @@ public:
   static Handle<Value> New(const Arguments& args)
   {
     HandleScope scope;
-    Lucene* hw = new Lucene();
-    hw->Wrap(args.This());
+    Lucene* lucene = new Lucene();
+    lucene->Wrap(args.This());
     return args.This();
   }
   static Handle<Value> Hello(const Arguments& args)
   {
     HandleScope scope;
-    Lucene* hw = ObjectWrap::Unwrap<Lucene>(args.This());
-    hw->m_count++;
+    Lucene* lucene = ObjectWrap::Unwrap<Lucene>(args.This());
+    lucene->m_count++;
     Local<String> result = String::New("Hello World");
     return scope.Close(result);
   }
@@ -225,19 +246,29 @@ public:
 
 	printf("Indexing took: %d ms.\n\n", (int32_t)(Misc::currentTimeMillis() - str));IndexWriter(*String::Utf8Value(args[1]), &an, false);
     
-    Lucene* hw = ObjectWrap::Unwrap<Lucene>(args.This());
+    //Lucene* lucene = ObjectWrap::Unwrap<Lucene>(args.This());
 
     return scope.Close(String::New("foo"));
   }
+
   static Handle<Value> SearchFiles(const Arguments& args)
   {
     HandleScope scope;
-    Lucene* lucene = ObjectWrap::Unwrap<Lucene>(args.This());
-    lucene->strings.insert("foo");
-    SearchFilesC(*String::Utf8Value(args[0]), *String::Utf8Value(args[1]));
-    return Undefined();
-    
+    //Lucene* lucene = ObjectWrap::Unwrap<Lucene>(args.This());
+
+    //lucene->paths->Set(Number::New(0),String::New("foo"));
+    SearchData *search = SearchFilesC(*String::Utf8Value(args[0]), *String::Utf8Value(args[1]));
+    v8::Local<v8::Array> ar = v8::Array::New(0);
+    //global vars ftw
+    for (int i = 0; i < arrsize; i++) {
+       //strcpy(utf,search[i].path);
+        ar->Set(v8::Number::New(i), String::New(search[i].path));
     }
+
+    v8::Context::GetCurrent()->Global()->Set(v8::String::New("fiz"), ar);
+    return scope.Close(ar);
+    
+  }
 
     
 };
