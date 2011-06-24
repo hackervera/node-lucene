@@ -129,6 +129,11 @@ void FileDocument(const char* f, Document* doc){
 	}
 }
 
+void FileText(const char* text, const char* path, Document* doc){
+    doc->add( *_CLNEW Field(_T("path"), path, Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
+    doc->add( *_CLNEW Field(_T("contents"), text, Field::STORE_YES | Field::INDEX_TOKENIZED) )
+}
+
 void indexDocs(IndexWriter* writer, const char* directory) {
     vector<string> files;
     std::sort(files.begin(),files.end());
