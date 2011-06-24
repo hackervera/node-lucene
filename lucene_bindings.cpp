@@ -129,10 +129,7 @@ void FileDocument(const char* f, Document* doc){
 	}
 }
 
-void FileText(const char* text, const char* path, Document* doc){
-    doc->add( *_CLNEW Field(_T("path"), path, Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
-    doc->add( *_CLNEW Field(_T("contents"), text, Field::STORE_YES | Field::INDEX_TOKENIZED) )
-}
+
 
 void indexDocs(IndexWriter* writer, const char* directory) {
     vector<string> files;
@@ -180,6 +177,7 @@ public:
     NODE_SET_PROTOTYPE_METHOD(s_ct, "hello", Hello);
     NODE_SET_PROTOTYPE_METHOD(s_ct, "index", IndexFiles);
     NODE_SET_PROTOTYPE_METHOD(s_ct, "search", SearchFiles);
+    NODE_SET_PROTOTYPE_METHOD(s_ct, "indexText", IndexText);
 
     target->Set(String::NewSymbol("Lucene"),
                 s_ct->GetFunction());
@@ -255,6 +253,64 @@ public:
 
     return scope.Close(String::New("foo"));
   }
+
+  static Handle<Value> IndexText(const Arguments& args)
+  {
+    HandleScope scope;
+    	IndexWriter* writer = NULL;
+	lucene::analysis::WhitespaceAnalyzer an;
+
+	if (IndexReader::indexExists(*String::Utf8Value(args[2])) ){
+		if ( IndexReader::isLocked(*String::Utf8Value(args[2])) ){
+			printf("Index was locked... unlocking it.\n");
+			IndexReader::unlock(*String::Utf8Value(args[2]));
+		}
+
+		writer = _CLNEW IndexWriter( *String::Utf8Value(args[2]), &an, false);
+	}else{
+		writer = _CLNEW IndexWriter( *String::Utf8Value(args[2]) ,&an, true);
+	}
+	// We can tell the writer to flush at certain occasions
+    //writer->setRAMBufferSizeMB(0.5);
+    //writer->setMaxBufferedDocs(3);
+
+    // To bypass a possible exception (we have no idea what we will be indexing...)
+    writer->setMaxFieldLength(0x7FFFFFFFL); // LUCENE_INT32_MAX_SHOULDBE
+
+    // Turn this off to make indexing faster; we'll turn it on later before optimizing
+    writer->setUseCompoundFile(false);
+
+	uint64_t str = Misc::currentTimeMillis();
+
+	Document doc;
+
+    doc.clear();
+
+    TCHAR path[CL_MAX_DIR];
+    STRCPY_AtoT(path,*String::Utf8Value(args[0]),CL_MAX_DIR);
+
+    TCHAR contents[CL_MAX_DIR];
+    STRCPY_AtoT(contents,*String::Utf8Value(args[1]),CL_MAX_DIR);
+
+    (&doc)->add( *_CLNEW Field(_T("path"), path, Field::STORE_YES | Field::INDEX_UNTOKENIZED ) );
+    (&doc)->add( *_CLNEW Field(_T("contents"), contents, Field::STORE_YES | Field::INDEX_TOKENIZED) );
+
+    writer->addDocument( &doc );
+
+    // Make the index use as little files as possible, and optimize it
+    writer->setUseCompoundFile(true);
+    writer->optimize();
+
+    // Close and clean up
+    writer->close();
+	_CLLDELETE(writer);
+
+	printf("Indexing took: %d ms.\n\n", (int32_t)(Misc::currentTimeMillis() - str));IndexWriter(*String::Utf8Value(args[2]), &an, false);
+
+    return scope.Close(Undefined());
+
+  }
+
 
   static Handle<Value> SearchFiles(const Arguments& args)
   {
