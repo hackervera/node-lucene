@@ -6,7 +6,7 @@ var Lucene = new lucene.Lucene();
 //Index key value pairs
 var people = [{name: "tyler", place_of_birth: "portland, city of roses"}];
 for(i=0;i<people.length;i++){
-	person = people[i];
+	var person = people[i];
 	for(var key in person){
 		Lucene.indexText(key,person[key],"indexes/"+person.name);
 	};
