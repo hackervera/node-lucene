@@ -1,8 +1,7 @@
 var lucene = require("./build/default/lucene_bindings.node");
 var Lucene = new lucene.Lucene();
 
-//Index a directory of files
-//Lucene.index("/users/tyler/texts","indexes");
+
 
 //Index key value pairs
 var people = [{name: "tyler", place_of_birth: "portland, city of roses"}];
@@ -17,16 +16,19 @@ for(i=0;i<people.length;i++){
 };
 
 
+
 /*
 Lucene.indexText("name","tylergillies","indexes/tyler")
 Lucene.indexText("place_of_birth","portland","indexes/tyler")
+
+
+Index a directory of files
+Lucene.index("/users/tyler/texts","indexes");
+console.log(Lucene.search("indexes", "tylergillies"));
+
+console.log(Lucene.search("/users/tyler/indexes", "lockerproject"));
+
+
+Lucene.search("indexes", "pet")
+console.log(Lucene.search("indexes", "portland"));
 */
-
-
-//console.log(Lucene.search("indexes", "tylergillies"));
-
-//console.log(Lucene.search("/users/tyler/indexes", "lockerproject"));
-
-
-//Lucene.search("indexes", "pet")
-//console.log(Lucene.search("indexes", "portland"));
