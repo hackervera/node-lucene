@@ -12,7 +12,7 @@ for(i=0;i<people.length;i++){
 	};
 	var search_term = "portland";
 	var results = Lucene.search("indexes/"+person.name, search_term);
-	for(j=0;i<results.length;i++){
+	for(j=0;j<results.length;j++){
 		var result = results[j].split(" ");
 		console.log("Found {\""+result[0]+"\":\""+person[result[0]]+"\"} with score of "+result[1]+" for search of '"+search_term+"'"); 
 	}
