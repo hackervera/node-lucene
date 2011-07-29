@@ -4,16 +4,40 @@ var Lucene = new lucene.Lucene();
 
 
 //Index key value pairs
-var people = [{name: "tyler", place_of_birth: "portland, city of roses"}];
+var people = [{name: "tyler", place_of_birth: "portland city of roses"}];
 for(i=0;i<people.length;i++){
 	var person = people[i];
 	for(var key in person){
 		Lucene.indexText(key,person[key],"indexes/"+person.name);
 	};
 	var search_term = "portland";
-	var result = Lucene.search("indexes/"+person.name, search_term);
-	console.log("Found "+key+":"+person[key]+" for search of '"+search_term+"'"); 
+	var results = Lucene.search("indexes/"+person.name, search_term);
+	for(j=0;i<results.length;i++){
+		var result = results[j].split(" ");
+		console.log("Found {\""+result[0]+"\":\""+person[result[0]]+"\"} with score of "+result[1]+" for search of '"+search_term+"'"); 
+	}
+
+
 };
+
+/* Expected output:
+
+/Users/tyler/node-lucene> node lucene.js    
+Indexing took: 4 ms.
+
+Indexing took: 8 ms.
+
+Searching for: portland
+
+0. place_of_birth - 0.500000
+
+
+Search took: 0 ms.
+Screen dump took: 0 ms.
+
+Found {"place_of_birth":"portland city of roses"} with score of 0.500000 for search of 'portland'
+
+*/
 
 
 
