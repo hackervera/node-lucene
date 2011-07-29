@@ -1,9 +1,32 @@
-var lucene = require ("./build/default/lucene_bindings.node");
+var lucene = require("./build/default/lucene_bindings.node");
 var Lucene = new lucene.Lucene();
-//console.log(Lucene.hello());
-Lucene.index("/users/tyler/texts","/users/tyler/indexes");
-Lucene.indexText("example twitter account","tylergillies is awesome","/users/tyler/indexes")
-Lucene.indexText("another example twitter account","lockerproject is awesome","/users/tyler/indexes")
-console.log(Lucene.search("/users/tyler/indexes", "tylergillies"));
-console.log(Lucene.search("/users/tyler/indexes", "lockerproject"));
-console.log(Lucene.search("/users/tyler/indexes", "pet"));
+
+//Index a directory of files
+//Lucene.index("/users/tyler/texts","indexes");
+
+//Index key value pairs
+var people = [{name: "tyler", place_of_birth: "portland, city of roses"}];
+for(i=0;i<people.length;i++){
+	person = people[i];
+	for(var key in person){
+		Lucene.indexText(key,person[key],"indexes/"+person.name);
+	};
+	var search_term = "portland";
+	var result = Lucene.search("indexes/"+person.name, search_term);
+	console.log("Found "+key+":"+person[key]+" for search of '"+search_term+"'"); 
+};
+
+
+/*
+Lucene.indexText("name","tylergillies","indexes/tyler")
+Lucene.indexText("place_of_birth","portland","indexes/tyler")
+*/
+
+
+//console.log(Lucene.search("indexes", "tylergillies"));
+
+//console.log(Lucene.search("/users/tyler/indexes", "lockerproject"));
+
+
+//Lucene.search("indexes", "pet")
+//console.log(Lucene.search("indexes", "portland"));
