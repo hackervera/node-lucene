@@ -1,2 +1,4 @@
 node-waf configure && node-waf build
-example file is lucene.js
+Example file is lucene.js
+
+Please fork and commit
